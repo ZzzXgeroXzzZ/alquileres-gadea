@@ -12,6 +12,7 @@ function DetalleCasa() {
   const [mesActual, setMesActual] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [indiceFoto, setIndiceFoto] = useState(0)
+  const [lightboxAbierto, setLightboxAbierto] = useState(false)
 
   useEffect(() => {
     async function cargarCasa() {
@@ -146,22 +147,20 @@ function DetalleCasa() {
     return encodeURIComponent(texto)
   }
 
-
-const handleReserva = async () => {
-  // Guardar consulta en Supabase
-  await supabase.from('consultas').insert({
-    casa_id: casa.id,
-    casa_nombre: casa.nombre,
-    fecha_entrada: fechaEntrada,
-    fecha_salida: fechaSalida,
-    noches: noches,
-    estado: 'Pendiente'
-  })
-  
-  // Abrir WhatsApp
-  window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
-}
-
+  const handleReserva = async () => {
+    // Guardar consulta en Supabase
+    await supabase.from('consultas').insert({
+      casa_id: casa.id,
+      casa_nombre: casa.nombre,
+      fecha_entrada: fechaEntrada,
+      fecha_salida: fechaSalida,
+      noches: noches,
+      estado: 'Pendiente'
+    })
+    
+    // Abrir WhatsApp
+    window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
+  }
 
   const fotos = casa.fotos || []
   const siguienteFoto = () => setIndiceFoto((indiceFoto + 1) % fotos.length)
@@ -181,11 +180,28 @@ const handleReserva = async () => {
         <div style={{ marginBottom: '24px', position: 'relative' }}>
           {fotos.length > 0 ? (
             <>
-              <div style={{ position: 'relative', height: '300px', overflow: 'hidden', borderRadius: '8px' }}>
+              <div 
+                className="carrusel-container"
+                style={{ 
+                  position: 'relative', 
+                  height: '300px', 
+                  overflow: 'hidden', 
+                  borderRadius: '8px',
+                  backgroundColor: '#000'
+                }}
+              >
+                <style>{`
+                  @media (min-width: 768px) {
+                    .carrusel-container {
+                      height: 500px !important;
+                    }
+                  }
+                `}</style>
                 <img 
                   src={fotos[indiceFoto]} 
                   alt={`Foto ${indiceFoto + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', cursor: 'pointer' }}
+                  onClick={() => setLightboxAbierto(true)}
                 />
                 <div style={{ position: 'absolute', bottom: '12px', right: '12px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '14px' }}>
                   {indiceFoto + 1} / {fotos.length}
@@ -221,8 +237,8 @@ const handleReserva = async () => {
             <p style={{ color: '#4b5563', marginBottom: '24px', lineHeight: '1.6' }}>{casa.descripcion}</p>
             
             <p style={{ fontSize: '20px', color: '#d97706', marginBottom: '24px', fontWeight: '500' }}>
-  💰 Consultar precio por WhatsApp
-</p>
+              💰 Consultar precio por WhatsApp
+            </p>
             
             {casa.servicios?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>
@@ -300,29 +316,147 @@ const handleReserva = async () => {
             <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>💡 Hacé clic en la fecha de entrada y luego en la de salida</p>
             
             {fechaEntrada && fechaSalida && (
-  <button
-    onClick={handleReserva}
-    style={{
-      display: 'block',
-      width: '100%',
-      marginTop: '24px',
-      padding: '16px',
-      backgroundColor: '#25D366',
-      color: 'white',
-      textAlign: 'center',
-      border: 'none',
-      borderRadius: '8px',
-      fontWeight: '600',
-      fontSize: '18px',
-      cursor: 'pointer'
-    }}
-  >
-    📱 Reservar por WhatsApp
-  </button>
-)}
+              <button
+                onClick={handleReserva}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginTop: '24px',
+                  padding: '16px',
+                  backgroundColor: '#25D366',
+                  color: 'white',
+                  textAlign: 'center',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '18px',
+                  cursor: 'pointer'
+                }}
+              >
+                📱 Reservar por WhatsApp
+              </button>
+            )}
           </div>
         </div>
       </main>
+      
+      {/* LIGHTBOX */}
+      {lightboxAbierto && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.95)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={() => setLightboxAbierto(false)}
+        >
+          <span 
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '30px',
+              color: 'white',
+              fontSize: '40px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              zIndex: 10000
+            }}
+            onClick={() => setLightboxAbierto(false)}
+          >
+            ✕
+          </span>
+          
+          <img 
+            src={fotos[indiceFoto]} 
+            alt="Vista ampliada"
+            style={{ 
+              maxWidth: '90%', 
+              maxHeight: '90%', 
+              objectFit: 'contain',
+              cursor: 'default'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            color: 'white',
+            padding: '8px 20px',
+            borderRadius: '30px',
+            fontSize: '16px'
+          }}>
+            {indiceFoto + 1} / {fotos.length}
+          </div>
+          
+          {fotos.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIndiceFoto((indiceFoto - 1 + fotos.length) % fotos.length)
+                }}
+                style={{
+                  position: 'absolute',
+                  left: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  border: 'none',
+                  fontSize: '30px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                  backdropFilter: 'blur(5px)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
+              >
+                ←
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIndiceFoto((indiceFoto + 1) % fotos.length)
+                }}
+                style={{
+                  position: 'absolute',
+                  right: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  border: 'none',
+                  fontSize: '30px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                  backdropFilter: 'blur(5px)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
+              >
+                →
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
