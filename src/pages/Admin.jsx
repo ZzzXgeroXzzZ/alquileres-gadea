@@ -20,11 +20,13 @@ function Admin() {
   const [mostrarFormNuevaCasa, setMostrarFormNuevaCasa] = useState(false)
   const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [nuevaCasa, setNuevaCasa] = useState({
-    nombre: '',
-    descripcion: '',
-    precio_por_noche: '',
-    ubicacion: ''
-  })
+  nombre: '',
+  descripcion: '',
+  precio_por_noche: '',
+  ubicacion: '',
+  latitud: '',
+  longitud: ''
+})
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -144,16 +146,18 @@ function Admin() {
     }
     
     const { error } = await supabase.from('casas').insert({
-      nombre: nuevaCasa.nombre,
-      descripcion: nuevaCasa.descripcion || 'Nueva propiedad',
-      precio_por_noche: parseInt(nuevaCasa.precio_por_noche),
-      ubicacion: nuevaCasa.ubicacion || '',
-      fotos: ['https://via.placeholder.com/400x300?text=Agregar+foto'],
-      reglas: [],
-      servicios: [],
-      esta_activa: true
-    })
-    
+  nombre: nuevaCasa.nombre,
+  descripcion: nuevaCasa.descripcion || 'Nueva propiedad',
+  precio_por_noche: parseInt(nuevaCasa.precio_por_noche),
+  ubicacion: nuevaCasa.ubicacion || '',
+  latitud: parseFloat(nuevaCasa.latitud) || null,
+  longitud: parseFloat(nuevaCasa.longitud) || null,
+  fotos: ['https://via.placeholder.com/400x300?text=Agregar+foto'],
+  reglas: [],
+  servicios: [],
+  esta_activa: true
+})
+
     if (error) {
       alert('Error al crear la casa: ' + error.message)
     } else {
@@ -410,7 +414,21 @@ function Admin() {
                 onChange={e => setNuevaCasa({...nuevaCasa, ubicacion: e.target.value})}
                 style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
               />
-              
+              <input
+  type="text"
+  placeholder="Latitud (ej: -31.417339)"
+  value={nuevaCasa.latitud || ''}
+  onChange={e => setNuevaCasa({...nuevaCasa, latitud: e.target.value})}
+  style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
+/>
+
+<input
+  type="text"
+  placeholder="Longitud (ej: -64.183319)"
+  value={nuevaCasa.longitud || ''}
+  onChange={e => setNuevaCasa({...nuevaCasa, longitud: e.target.value})}
+  style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
+/>
               <button
                 onClick={crearCasa}
                 style={{
@@ -523,7 +541,42 @@ function Admin() {
                       </button>
                     </div>
                   </div>
-
+{/* Editar ubicación y coordenadas */}
+<div style={{ marginBottom: 20 }}>
+  <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>📍 Ubicación</label>
+  <input
+    type="text"
+    placeholder="Dirección"
+    value={casa.ubicacion || ''}
+    onChange={async (e) => {
+      await supabase.from('casas').update({ ubicacion: e.target.value }).eq('id', casa.id)
+      cargarCasas()
+    }}
+    style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #d1d5db', marginBottom: 8 }}
+  />
+  <div style={{ display: 'flex', gap: 8 }}>
+    <input
+      type="text"
+      placeholder="Latitud"
+      defaultValue={casa.latitud || ''}
+      onBlur={async (e) => {
+        await supabase.from('casas').update({ latitud: parseFloat(e.target.value) || null }).eq('id', casa.id)
+        cargarCasas()
+      }}
+      style={{ flex: 1, padding: 10, borderRadius: 6, border: '1px solid #d1d5db' }}
+    />
+    <input
+      type="text"
+      placeholder="Longitud"
+      defaultValue={casa.longitud || ''}
+      onBlur={async (e) => {
+        await supabase.from('casas').update({ longitud: parseFloat(e.target.value) || null }).eq('id', casa.id)
+        cargarCasas()
+      }}
+      style={{ flex: 1, padding: 10, borderRadius: 6, border: '1px solid #d1d5db' }}
+    />
+  </div>
+</div>
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>🖼️ Fotos de la propiedad</label>
                     
