@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import DetalleCasa from './pages/DetalleCasa'
-import Admin from './pages/Admin'
+import Home from './pages/Home.jsx'
+import DetalleCasa from './pages/DetalleCasa.jsx'
+import Admin from './pages/Admin.jsx'
 
 function App() {
   return (
