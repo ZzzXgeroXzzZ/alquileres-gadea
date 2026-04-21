@@ -18,6 +18,7 @@ function Admin() {
   const [nuevaRegla, setNuevaRegla] = useState('')
   const [nuevoServicio, setNuevoServicio] = useState('')
   const [mostrarFormNuevaCasa, setMostrarFormNuevaCasa] = useState(false)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [nuevaCasa, setNuevaCasa] = useState({
     nombre: '',
     descripcion: '',
@@ -166,6 +167,87 @@ function Admin() {
     if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
       return
     }
+
+    // Subir una nueva foto
+async function subirFoto(casaId, archivo) {
+  if (!archivo) return
+  
+  setSubiendoFoto(true)
+  
+  const nombreArchivo = `${casaId}_${Date.now()}_${archivo.name}`
+  
+  const { error: uploadError } = await supabase.storage
+    .from('fotos-casas')
+    .upload(nombreArchivo, archivo)
+  
+  if (uploadError) {
+    alert('Error al subir la foto: ' + uploadError.message)
+    setSubiendoFoto(false)
+    return
+  }
+  
+  const { data: urlData } = supabase.storage
+    .from('fotos-casas')
+    .getPublicUrl(nombreArchivo)
+  
+  const nuevaFoto = urlData.publicUrl
+  
+  const { data: casaData } = await supabase
+    .from('casas')
+    .select('fotos')
+    .eq('id', casaId)
+    .single()
+  
+  const fotosActuales = casaData?.fotos || []
+  const nuevasFotos = [...fotosActuales, nuevaFoto]
+  
+  const { error: updateError } = await supabase
+    .from('casas')
+    .update({ fotos: nuevasFotos })
+    .eq('id', casaId)
+  
+  if (updateError) {
+    alert('Error al actualizar: ' + updateError.message)
+  } else {
+    cargarCasas()
+  }
+  
+  setSubiendoFoto(false)
+}
+
+// Eliminar una foto
+async function eliminarFoto(casaId, fotoUrl, fotosActuales) {
+  const urlParts = fotoUrl.split('/')
+  const nombreArchivo = urlParts[urlParts.length - 1]
+  
+  await supabase.storage
+    .from('fotos-casas')
+    .remove([nombreArchivo])
+  
+  const nuevasFotos = fotosActuales.filter(f => f !== fotoUrl)
+  
+  await supabase
+    .from('casas')
+    .update({ fotos: nuevasFotos })
+    .eq('id', casaId)
+  
+  cargarCasas()
+}
+
+// Establecer como foto principal
+async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
+  const nuevasFotos = [
+    fotoUrl,
+    ...fotosActuales.filter(f => f !== fotoUrl)
+  ]
+  
+  await supabase
+    .from('casas')
+    .update({ fotos: nuevasFotos })
+    .eq('id', casaId)
+  
+  cargarCasas()
+}
     
     await supabase.from('fechas_bloqueadas').delete().eq('casa_id', id)
     const { error } = await supabase.from('casas').delete().eq('id', id)
@@ -451,6 +533,113 @@ function Admin() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Gestionar fotos */}
+<div style={{ marginBottom: 20 }}>
+  <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>🖼️ Fotos de la propiedad</label>
+  
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+    {casa.fotos?.map((foto, idx) => (
+      <div key={idx} style={{ position: 'relative', width: 80, height: 80 }}>
+        <img 
+          src={foto} 
+          alt={`Foto ${idx + 1}`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
+        />
+        <button
+          onClick={() => eliminarFoto(casa.id, foto, casa.fotos)}
+          style={{
+            position: 'absolute',
+            top: -6,
+            right: -6,
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            backgroundColor: '#dc2626',
+            color: 'white',
+            border: '2px solid white',
+            cursor: 'pointer',
+            fontSize: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          ✕
+        </button>
+        {idx !== 0 && (
+          <button
+            onClick={() => setFotoPrincipal(casa.id, foto, casa.fotos)}
+            style={{
+              position: 'absolute',
+              bottom: 4,
+              left: 4,
+              padding: '2px 6px',
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 4,
+              fontSize: 10,
+              cursor: 'pointer'
+            }}
+          >
+            ⭐ Principal
+          </button>
+        )}
+        {idx === 0 && (
+          <span style={{
+            position: 'absolute',
+            bottom: 4,
+            left: 4,
+            padding: '2px 6px',
+            backgroundColor: '#d97706',
+            color: 'white',
+            borderRadius: 4,
+            fontSize: 10
+          }}>
+            ⭐ Principal
+          </span>
+        )}
+      </div>
+    ))}
+  </div>
+  
+  <div>
+    <input
+      type="file"
+      accept="image/*"
+      id={`upload-foto-${casa.id}`}
+      style={{ display: 'none' }}
+      onChange={async (e) => {
+        const archivo = e.target.files[0]
+        if (archivo) {
+          await subirFoto(casa.id, archivo)
+          e.target.value = ''
+        }
+      }}
+    />
+    <button
+      onClick={() => document.getElementById(`upload-foto-${casa.id}`).click()}
+      disabled={subiendoFoto}
+      style={{
+        padding: '10px 20px',
+        backgroundColor: '#3b82f6',
+        color: 'white',
+        border: 'none',
+        borderRadius: 6,
+        cursor: subiendoFoto ? 'not-allowed' : 'pointer',
+        opacity: subiendoFoto ? 0.7 : 1,
+        fontSize: 14
+      }}
+    >
+      {subiendoFoto ? '⏳ Subiendo...' : '📤 Subir nueva foto'}
+    </button>
+    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 12 }}>
+      La primera foto será la principal
+    </span>
+  </div>
+</div>
+
 
                   {/* Editar precio */}
                   <div style={{ marginBottom: 20 }}>
