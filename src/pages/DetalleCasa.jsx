@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import Carrusel from '../components/Carrusel'
 
 function DetalleCasa() {
   const { id } = useParams()
@@ -183,18 +184,14 @@ function DetalleCasa() {
       </header>
       
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-        {/* Galería */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '24px' }}>
-          {casa.fotos?.map((foto, idx) => (
-            <img 
-              key={idx}
-              src={foto} 
-              alt={`${casa.nombre} ${idx + 1}`}
-              style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
-            />
-          ))}
-        </div>
-        
+      
+      
+      {/* Carrusel de fotos */}
+<div style={{ marginBottom: '24px' }}>
+  <Carrusel fotos={casa.fotos} />
+</div>
+
+
         {/* Info y Calendario */}
         <div className="grid-container" style={{ 
           display: 'grid', 
