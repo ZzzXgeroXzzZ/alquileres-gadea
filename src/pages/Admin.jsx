@@ -167,87 +167,6 @@ function Admin() {
     if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
       return
     }
-
-    // Subir una nueva foto
-async function subirFoto(casaId, archivo) {
-  if (!archivo) return
-  
-  setSubiendoFoto(true)
-  
-  const nombreArchivo = `${casaId}_${Date.now()}_${archivo.name}`
-  
-  const { error: uploadError } = await supabase.storage
-    .from('fotos-casas')
-    .upload(nombreArchivo, archivo)
-  
-  if (uploadError) {
-    alert('Error al subir la foto: ' + uploadError.message)
-    setSubiendoFoto(false)
-    return
-  }
-  
-  const { data: urlData } = supabase.storage
-    .from('fotos-casas')
-    .getPublicUrl(nombreArchivo)
-  
-  const nuevaFoto = urlData.publicUrl
-  
-  const { data: casaData } = await supabase
-    .from('casas')
-    .select('fotos')
-    .eq('id', casaId)
-    .single()
-  
-  const fotosActuales = casaData?.fotos || []
-  const nuevasFotos = [...fotosActuales, nuevaFoto]
-  
-  const { error: updateError } = await supabase
-    .from('casas')
-    .update({ fotos: nuevasFotos })
-    .eq('id', casaId)
-  
-  if (updateError) {
-    alert('Error al actualizar: ' + updateError.message)
-  } else {
-    cargarCasas()
-  }
-  
-  setSubiendoFoto(false)
-}
-
-// Eliminar una foto
-async function eliminarFoto(casaId, fotoUrl, fotosActuales) {
-  const urlParts = fotoUrl.split('/')
-  const nombreArchivo = urlParts[urlParts.length - 1]
-  
-  await supabase.storage
-    .from('fotos-casas')
-    .remove([nombreArchivo])
-  
-  const nuevasFotos = fotosActuales.filter(f => f !== fotoUrl)
-  
-  await supabase
-    .from('casas')
-    .update({ fotos: nuevasFotos })
-    .eq('id', casaId)
-  
-  cargarCasas()
-}
-
-// Establecer como foto principal
-async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
-  const nuevasFotos = [
-    fotoUrl,
-    ...fotosActuales.filter(f => f !== fotoUrl)
-  ]
-  
-  await supabase
-    .from('casas')
-    .update({ fotos: nuevasFotos })
-    .eq('id', casaId)
-  
-  cargarCasas()
-}
     
     await supabase.from('fechas_bloqueadas').delete().eq('casa_id', id)
     const { error } = await supabase.from('casas').delete().eq('id', id)
@@ -257,6 +176,85 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
     } else {
       cargarCasas()
     }
+  }
+
+  // ✅ FUNCIONES DE FOTOS (FUERA de eliminarCasa)
+  async function subirFoto(casaId, archivo) {
+    if (!archivo) return
+    
+    setSubiendoFoto(true)
+    
+    const nombreArchivo = `${casaId}_${Date.now()}_${archivo.name}`
+    
+    const { error: uploadError } = await supabase.storage
+      .from('fotos-casas')
+      .upload(nombreArchivo, archivo)
+    
+    if (uploadError) {
+      alert('Error al subir la foto: ' + uploadError.message)
+      setSubiendoFoto(false)
+      return
+    }
+    
+    const { data: urlData } = supabase.storage
+      .from('fotos-casas')
+      .getPublicUrl(nombreArchivo)
+    
+    const nuevaFoto = urlData.publicUrl
+    
+    const { data: casaData } = await supabase
+      .from('casas')
+      .select('fotos')
+      .eq('id', casaId)
+      .single()
+    
+    const fotosActuales = casaData?.fotos || []
+    const nuevasFotos = [...fotosActuales, nuevaFoto]
+    
+    const { error: updateError } = await supabase
+      .from('casas')
+      .update({ fotos: nuevasFotos })
+      .eq('id', casaId)
+    
+    if (updateError) {
+      alert('Error al actualizar: ' + updateError.message)
+    } else {
+      cargarCasas()
+    }
+    
+    setSubiendoFoto(false)
+  }
+
+  async function eliminarFoto(casaId, fotoUrl, fotosActuales) {
+    const urlParts = fotoUrl.split('/')
+    const nombreArchivo = urlParts[urlParts.length - 1]
+    
+    await supabase.storage
+      .from('fotos-casas')
+      .remove([nombreArchivo])
+    
+    const nuevasFotos = fotosActuales.filter(f => f !== fotoUrl)
+    
+    await supabase
+      .from('casas')
+      .update({ fotos: nuevasFotos })
+      .eq('id', casaId)
+    
+    cargarCasas()
+  }
+
+  async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
+    const nuevasFotos = [
+      fotoUrl,
+      ...fotosActuales.filter(f => f !== fotoUrl)
+    ]
+    
+    await supabase
+      .from('casas')
+      .update({ fotos: nuevasFotos })
+      .eq('id', casaId)
+    
+    cargarCasas()
   }
 
   const mesAnterior = () => setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
@@ -284,7 +282,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
     return dias
   }
 
-  // PANTALLA DE LOGIN
   if (!sesion) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#fef7ed', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
@@ -341,7 +338,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
     )
   }
 
-  // PANTALLA DE ADMINISTRACIÓN
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fef7ed' }}>
       <header style={{ backgroundColor: '#92400e', color: 'white', padding: 16, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -359,7 +355,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
         <Link to="/" style={{ color: '#d97706', textDecoration: 'none', fontSize: 14 }}>← Ver sitio público</Link>
         
-        {/* Botón Nueva Casa */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 20 }}>
           <h2 style={{ fontSize: 22, color: '#92400e', margin: 0 }}>Mis Propiedades</h2>
           <button
@@ -379,7 +374,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
           </button>
         </div>
 
-        {/* Formulario Nueva Casa */}
         {mostrarFormNuevaCasa && (
           <div style={{ backgroundColor: 'white', padding: 20, borderRadius: 12, marginBottom: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 18, fontWeight: '600', color: '#92400e', marginBottom: 16 }}>🏠 Agregar nueva propiedad</h3>
@@ -436,12 +430,10 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
           </div>
         )}
 
-        {/* Lista de casas */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {casas.map(casa => (
             <div key={casa.id} style={{ backgroundColor: 'white', padding: 20, borderRadius: 12, boxShadow: '0 2px 4px rgba(0,0,0,0.05)', opacity: casa.esta_activa ? 1 : 0.6 }}>
               
-              {/* Cabecera de la casa */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <img 
@@ -510,11 +502,9 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
                 </div>
               </div>
 
-              {/* Panel de edición */}
               {casaEditando === casa.id && (
                 <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid #fef3c7' }}>
                   
-                  {/* Editar nombre */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>📛 Nombre</label>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -534,114 +524,111 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
                     </div>
                   </div>
 
-                  {/* Gestionar fotos */}
-<div style={{ marginBottom: 20 }}>
-  <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>🖼️ Fotos de la propiedad</label>
-  
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-    {casa.fotos?.map((foto, idx) => (
-      <div key={idx} style={{ position: 'relative', width: 80, height: 80 }}>
-        <img 
-          src={foto} 
-          alt={`Foto ${idx + 1}`}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
-        />
-        <button
-          onClick={() => eliminarFoto(casa.id, foto, casa.fotos)}
-          style={{
-            position: 'absolute',
-            top: -6,
-            right: -6,
-            width: 24,
-            height: 24,
-            borderRadius: '50%',
-            backgroundColor: '#dc2626',
-            color: 'white',
-            border: '2px solid white',
-            cursor: 'pointer',
-            fontSize: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          ✕
-        </button>
-        {idx !== 0 && (
-          <button
-            onClick={() => setFotoPrincipal(casa.id, foto, casa.fotos)}
-            style={{
-              position: 'absolute',
-              bottom: 4,
-              left: 4,
-              padding: '2px 6px',
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-              fontSize: 10,
-              cursor: 'pointer'
-            }}
-          >
-            ⭐ Principal
-          </button>
-        )}
-        {idx === 0 && (
-          <span style={{
-            position: 'absolute',
-            bottom: 4,
-            left: 4,
-            padding: '2px 6px',
-            backgroundColor: '#d97706',
-            color: 'white',
-            borderRadius: 4,
-            fontSize: 10
-          }}>
-            ⭐ Principal
-          </span>
-        )}
-      </div>
-    ))}
-  </div>
-  
-  <div>
-    <input
-      type="file"
-      accept="image/*"
-      id={`upload-foto-${casa.id}`}
-      style={{ display: 'none' }}
-      onChange={async (e) => {
-        const archivo = e.target.files[0]
-        if (archivo) {
-          await subirFoto(casa.id, archivo)
-          e.target.value = ''
-        }
-      }}
-    />
-    <button
-      onClick={() => document.getElementById(`upload-foto-${casa.id}`).click()}
-      disabled={subiendoFoto}
-      style={{
-        padding: '10px 20px',
-        backgroundColor: '#3b82f6',
-        color: 'white',
-        border: 'none',
-        borderRadius: 6,
-        cursor: subiendoFoto ? 'not-allowed' : 'pointer',
-        opacity: subiendoFoto ? 0.7 : 1,
-        fontSize: 14
-      }}
-    >
-      {subiendoFoto ? '⏳ Subiendo...' : '📤 Subir nueva foto'}
-    </button>
-    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 12 }}>
-      La primera foto será la principal
-    </span>
-  </div>
-</div>
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>🖼️ Fotos de la propiedad</label>
+                    
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                      {casa.fotos?.map((foto, idx) => (
+                        <div key={idx} style={{ position: 'relative', width: 80, height: 80 }}>
+                          <img 
+                            src={foto} 
+                            alt={`Foto ${idx + 1}`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
+                          />
+                          <button
+                            onClick={() => eliminarFoto(casa.id, foto, casa.fotos)}
+                            style={{
+                              position: 'absolute',
+                              top: -6,
+                              right: -6,
+                              width: 24,
+                              height: 24,
+                              borderRadius: '50%',
+                              backgroundColor: '#dc2626',
+                              color: 'white',
+                              border: '2px solid white',
+                              cursor: 'pointer',
+                              fontSize: 14,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            ✕
+                          </button>
+                          {idx !== 0 && (
+                            <button
+                              onClick={() => setFotoPrincipal(casa.id, foto, casa.fotos)}
+                              style={{
+                                position: 'absolute',
+                                bottom: 4,
+                                left: 4,
+                                padding: '2px 6px',
+                                backgroundColor: 'rgba(0,0,0,0.6)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 4,
+                                fontSize: 10,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ⭐ Principal
+                            </button>
+                          )}
+                          {idx === 0 && (
+                            <span style={{
+                              position: 'absolute',
+                              bottom: 4,
+                              left: 4,
+                              padding: '2px 6px',
+                              backgroundColor: '#d97706',
+                              color: 'white',
+                              borderRadius: 4,
+                              fontSize: 10
+                            }}>
+                              ⭐ Principal
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id={`upload-foto-${casa.id}`}
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                          const archivo = e.target.files[0]
+                          if (archivo) {
+                            await subirFoto(casa.id, archivo)
+                            e.target.value = ''
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => document.getElementById(`upload-foto-${casa.id}`).click()}
+                        disabled={subiendoFoto}
+                        style={{
+                          padding: '10px 20px',
+                          backgroundColor: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: subiendoFoto ? 'not-allowed' : 'pointer',
+                          opacity: subiendoFoto ? 0.7 : 1,
+                          fontSize: 14
+                        }}
+                      >
+                        {subiendoFoto ? '⏳ Subiendo...' : '📤 Subir nueva foto'}
+                      </button>
+                      <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 12 }}>
+                        La primera foto será la principal
+                      </span>
+                    </div>
+                  </div>
 
-
-                  {/* Editar precio */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>💰 Precio por noche</label>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -661,7 +648,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
                     </div>
                   </div>
 
-                  {/* Editar descripción */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>📝 Descripción</label>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -681,7 +667,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
                     </div>
                   </div>
 
-                  {/* Gestionar reglas */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>📜 Reglas</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
@@ -709,7 +694,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
                     </div>
                   </div>
 
-                  {/* Gestionar servicios */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>✨ Servicios</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
@@ -737,7 +721,6 @@ async function setFotoPrincipal(casaId, fotoUrl, fotosActuales) {
                     </div>
                   </div>
 
-                  {/* Calendario de fechas bloqueadas */}
                   <div>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 12 }}>📅 Fechas bloqueadas</label>
                     
