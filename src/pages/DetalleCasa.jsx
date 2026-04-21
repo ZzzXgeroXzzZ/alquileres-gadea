@@ -1,7 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import Carrusel from '../components/Carrusel'
 
 function DetalleCasa() {
   const { id } = useParams()
@@ -11,6 +10,7 @@ function DetalleCasa() {
   const [fechaSalida, setFechaSalida] = useState(null)
   const [mesActual, setMesActual] = useState(new Date())
   const [loading, setLoading] = useState(true)
+  const [indiceFoto, setIndiceFoto] = useState(0)
 
   useEffect(() => {
     async function cargarCasa() {
@@ -38,8 +38,7 @@ function DetalleCasa() {
       if (fechasError) {
         console.error('Error cargando fechas:', fechasError)
       } else {
-        const fechas = fechasData.map(f => f.fecha)
-        setFechasOcupadas(fechas)
+        setFechasOcupadas(fechasData.map(f => f.fecha))
       }
       
       setLoading(false)
@@ -64,13 +63,8 @@ function DetalleCasa() {
     )
   }
   
-  const mesAnterior = () => {
-    setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
-  }
-  
-  const mesSiguiente = () => {
-    setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 1))
-  }
+  const mesAnterior = () => setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
+  const mesSiguiente = () => setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 1))
   
   const generarCalendario = () => {
     const año = mesActual.getFullYear()
@@ -79,10 +73,7 @@ function DetalleCasa() {
     const ultimoDia = new Date(año, mes + 1, 0)
     const dias = []
     
-    const diaSemanaPrimero = primerDia.getDay()
-    for (let i = 0; i < diaSemanaPrimero; i++) {
-      dias.push(null)
-    }
+    for (let i = 0; i < primerDia.getDay(); i++) dias.push(null)
     
     for (let i = 1; i <= ultimoDia.getDate(); i++) {
       const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
@@ -93,7 +84,6 @@ function DetalleCasa() {
         esPasado: new Date(fechaStr) < new Date(new Date().setHours(0, 0, 0, 0))
       })
     }
-    
     return dias
   }
   
@@ -104,30 +94,22 @@ function DetalleCasa() {
     const fecha = new Date(fechaStr)
     const hoy = new Date()
     hoy.setHours(0, 0, 0, 0)
-    
     if (fecha < hoy) return
     
     if (fechaEntrada && !fechaSalida) {
       const entrada = new Date(fechaEntrada)
-      
       if (fecha > entrada) {
         let hayOcupado = false
         const fechaCheck = new Date(entrada)
-        
         while (fechaCheck <= fecha) {
-          const fechaCheckStr = fechaCheck.toISOString().split('T')[0]
-          if (fechasOcupadas.includes(fechaCheckStr)) {
+          if (fechasOcupadas.includes(fechaCheck.toISOString().split('T')[0])) {
             hayOcupado = true
             break
           }
           fechaCheck.setDate(fechaCheck.getDate() + 1)
         }
-        
-        if (!hayOcupado) {
-          setFechaSalida(fechaStr)
-        } else {
-          alert('Hay fechas ocupadas en el rango seleccionado')
-        }
+        if (!hayOcupado) setFechaSalida(fechaStr)
+        else alert('Hay fechas ocupadas en el rango seleccionado')
       } else if (fecha < entrada) {
         setFechaEntrada(fechaStr)
         setFechaSalida(null)
@@ -143,8 +125,7 @@ function DetalleCasa() {
   
   const calcularNoches = () => {
     if (!fechaEntrada || !fechaSalida) return 0
-    const diff = new Date(fechaSalida) - new Date(fechaEntrada)
-    return Math.ceil(diff / (1000 * 60 * 60 * 24))
+    return Math.ceil((new Date(fechaSalida) - new Date(fechaEntrada)) / (1000 * 60 * 60 * 24))
   }
   
   const noches = calcularNoches()
@@ -152,26 +133,25 @@ function DetalleCasa() {
   const esReservaLejana = () => {
     if (!fechaEntrada) return false
     const entrada = new Date(fechaEntrada)
-    const hoy = new Date()
     const tresMesesDespues = new Date()
-    tresMesesDespues.setMonth(hoy.getMonth() + 3)
+    tresMesesDespues.setMonth(new Date().getMonth() + 3)
     return entrada > tresMesesDespues
   }
   
   const mensajeWhatsApp = () => {
-    const fechaEntradaFormateada = fechaEntrada ? new Date(fechaEntrada).toLocaleDateString('es-AR') : ''
-    const fechaSalidaFormateada = fechaSalida ? new Date(fechaSalida).toLocaleDateString('es-AR') : ''
-    
-    const texto = `Hola! Me interesa reservar *${casa.nombre}*.
-📅 Fechas: del *${fechaEntradaFormateada}* al *${fechaSalidaFormateada}* (${noches} ${noches === 1 ? 'noche' : 'noches'}).
-💰 Por favor, confirmame el precio total y la disponibilidad. ¡Gracias!`
-    
+    const entrada = fechaEntrada ? new Date(fechaEntrada).toLocaleDateString('es-AR') : ''
+    const salida = fechaSalida ? new Date(fechaSalida).toLocaleDateString('es-AR') : ''
+    const texto = `Hola! Me interesa reservar *${casa.nombre}*.\n📅 Fechas: del *${entrada}* al *${salida}* (${noches} noches).\n💰 Por favor, confirmame el precio total. ¡Gracias!`
     return encodeURIComponent(texto)
   }
 
+  const fotos = casa.fotos || []
+  const siguienteFoto = () => setIndiceFoto((indiceFoto + 1) % fotos.length)
+  const anteriorFoto = () => setIndiceFoto((indiceFoto - 1 + fotos.length) % fotos.length)
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fef7ed' }}>
-      <header style={{ backgroundColor: '#d97706', color: 'white', padding: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+      <header style={{ backgroundColor: '#d97706', color: 'white', padding: '16px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '20px' }}>←</Link>
           <h1 style={{ fontSize: '20px', fontWeight: 'bold' }}>{casa.nombre}</h1>
@@ -179,27 +159,46 @@ function DetalleCasa() {
       </header>
       
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-        {/* CARRUSEL DE FOTOS */}
-        <div style={{ marginBottom: '24px' }}>
-          <Carrusel fotos={casa.fotos} />
+        {/* CARRUSEL INTEGRADO */}
+        <div style={{ marginBottom: '24px', position: 'relative' }}>
+          {fotos.length > 0 ? (
+            <>
+              <div style={{ position: 'relative', height: '300px', overflow: 'hidden', borderRadius: '8px' }}>
+                <img 
+                  src={fotos[indiceFoto]} 
+                  alt={`Foto ${indiceFoto + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                <div style={{ position: 'absolute', bottom: '12px', right: '12px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '14px' }}>
+                  {indiceFoto + 1} / {fotos.length}
+                </div>
+              </div>
+              
+              {fotos.length > 1 && (
+                <>
+                  <button onClick={anteriorFoto} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'white', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', cursor: 'pointer', fontSize: '20px', color: '#d97706' }}>←</button>
+                  <button onClick={siguienteFoto} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'white', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', cursor: 'pointer', fontSize: '20px', color: '#d97706' }}>→</button>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+                    {fotos.map((_, idx) => (
+                      <button key={idx} onClick={() => setIndiceFoto(idx)} style={{ width: idx === indiceFoto ? '24px' : '8px', height: '8px', borderRadius: '4px', backgroundColor: idx === indiceFoto ? '#d97706' : '#d1d5db', border: 'none', cursor: 'pointer', transition: 'all 0.3s' }} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div style={{ height: '300px', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
+              <span style={{ color: '#6b7280' }}>📷 Sin fotos</span>
+            </div>
+          )}
         </div>
         
         {/* Info y Calendario */}
-        <div className="grid-container" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr', 
-          gap: '24px'
-        }}>
-          <style>{`
-            @media (min-width: 768px) {
-              .grid-container {
-                grid-template-columns: 1fr 1fr !important;
-              }
-            }
-          `}</style>
+        <div className="grid-container" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+          <style>{`@media (min-width: 768px) { .grid-container { grid-template-columns: 1fr 1fr !important; } }`}</style>
           
-          {/* Columna izquierda - Info */}
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px' }}>
             <h2 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '16px', color: '#92400e' }}>📋 Detalles de la propiedad</h2>
             <p style={{ color: '#4b5563', marginBottom: '24px', lineHeight: '1.6' }}>{casa.descripcion}</p>
             
@@ -209,38 +208,19 @@ function DetalleCasa() {
             
             {casa.servicios?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
-                  ✨ Servicios incluidos
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>✨ Servicios incluidos</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                  {casa.servicios.map((servicio, idx) => (
-                    <div key={idx} style={{ fontSize: '14px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {servicio}
-                    </div>
-                  ))}
+                  {casa.servicios.map((s, i) => <div key={i} style={{ fontSize: '14px', color: '#4b5563' }}>{s}</div>)}
                 </div>
               </div>
             )}
             
             {casa.reglas?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
-                  📜 Reglas de la casa
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>📜 Reglas de la casa</h3>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {casa.reglas.map((regla, idx) => (
-                    <li key={idx} style={{ fontSize: '14px', color: '#4b5563', padding: '6px 0', borderBottom: '1px solid #fef3c7' }}>
-                      {regla}
-                    </li>
-                  ))}
+                  {casa.reglas.map((r, i) => <li key={i} style={{ fontSize: '14px', color: '#4b5563', padding: '6px 0', borderBottom: '1px solid #fef3c7' }}>{r}</li>)}
                 </ul>
-              </div>
-            )}
-            
-            {casa.ubicacion && (
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>📍 Ubicación</h3>
-                <p style={{ fontSize: '14px', color: '#4b5563' }}>{casa.ubicacion}</p>
               </div>
             )}
             
@@ -250,165 +230,52 @@ function DetalleCasa() {
                 <p>📅 Entrada: {new Date(fechaEntrada).toLocaleDateString('es-AR')}</p>
                 <p>📅 Salida: {new Date(fechaSalida).toLocaleDateString('es-AR')}</p>
                 <p>🌙 {noches} {noches === 1 ? 'noche' : 'noches'}</p>
-                <p style={{ fontSize: '16px', color: '#6b7280', marginTop: '12px', fontStyle: 'italic' }}>
-                  💬 El precio final será confirmado por WhatsApp
-                </p>
-                
+                <p style={{ fontSize: '16px', color: '#6b7280', marginTop: '12px', fontStyle: 'italic' }}>💬 El precio final será confirmado por WhatsApp</p>
                 {esReservaLejana() && (
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '12px', 
-                    backgroundColor: '#fef3c7', 
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    color: '#92400e'
-                  }}>
-                    ⚠️ Para reservas con más de 3 meses de anticipación, los precios pueden variar. 
-                    Te confirmaremos el valor final por WhatsApp.
+                  <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#fef3c7', borderRadius: '6px', fontSize: '14px', color: '#92400e' }}>
+                    ⚠️ Para reservas con más de 3 meses de anticipación, los precios pueden variar.
                   </div>
                 )}
               </div>
             )}
           </div>
           
-          {/* Columna derecha - Calendario */}
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-              <button 
-                onClick={mesAnterior}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#fef3c7',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  color: '#92400e'
-                }}
-              >
-                ← Anterior
-              </button>
-              
-              <h3 style={{ fontSize: '18px', fontWeight: '600', textTransform: 'capitalize', color: '#92400e' }}>
-                {mesActual.toLocaleString('es-AR', { month: 'long', year: 'numeric' })}
-              </h3>
-              
-              <button 
-                onClick={mesSiguiente}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#fef3c7',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  color: '#92400e'
-                }}
-              >
-                Siguiente →
-              </button>
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <button onClick={mesAnterior} style={{ padding: '8px 12px', backgroundColor: '#fef3c7', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#92400e' }}>← Anterior</button>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', textTransform: 'capitalize', color: '#92400e' }}>{mesActual.toLocaleString('es-AR', { month: 'long', year: 'numeric' })}</h3>
+              <button onClick={mesSiguiente} style={{ padding: '8px 12px', backgroundColor: '#fef3c7', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#92400e' }}>Siguiente →</button>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
-              {nombresDias.map(dia => (
-                <div key={dia} style={{ textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>
-                  {dia.slice(0, 3)}
-                </div>
-              ))}
+              {nombresDias.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>{d.slice(0, 3)}</div>)}
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
               {diasCalendario.map((item, idx) => {
                 if (!item) return <div key={idx} style={{ height: '40px' }} />
-                
-                const fechaSeleccionada = item.fecha === fechaEntrada || item.fecha === fechaSalida
-                const enRango = fechaEntrada && fechaSalida && 
-                  new Date(item.fecha) > new Date(fechaEntrada) && 
-                  new Date(item.fecha) < new Date(fechaSalida)
-                const estaOcupado = item.ocupado
-                const esPasado = item.esPasado
-                
+                const seleccionado = item.fecha === fechaEntrada || item.fecha === fechaSalida
+                const enRango = fechaEntrada && fechaSalida && new Date(item.fecha) > new Date(fechaEntrada) && new Date(item.fecha) < new Date(fechaSalida)
                 return (
-                  <button
-                    key={idx}
-                    onClick={() => !estaOcupado && !esPasado && handleSeleccionarFecha(item.fecha)}
-                    disabled={estaOcupado || esPasado}
-                    style={{
-                      height: '40px',
-                      border: 'none',
-                      borderRadius: '4px',
-                      backgroundColor: estaOcupado 
-                        ? '#fee2e2' 
-                        : esPasado
-                          ? '#f3f4f6'
-                          : fechaSeleccionada 
-                            ? '#d97706' 
-                            : enRango 
-                              ? '#fef3c7' 
-                              : 'white',
-                      color: estaOcupado 
-                        ? '#dc2626' 
-                        : esPasado
-                          ? '#9ca3af'
-                          : fechaSeleccionada 
-                            ? 'white' 
-                            : '#1f2937',
-                      cursor: (estaOcupado || esPasado) ? 'not-allowed' : 'pointer',
-                      fontWeight: fechaSeleccionada ? '600' : '400',
-                      opacity: (estaOcupado || esPasado) ? 0.6 : 1,
-                      transition: 'all 0.1s',
-                      fontSize: '14px'
-                    }}
-                  >
-                    {item.dia}
-                  </button>
+                  <button key={idx} onClick={() => !item.ocupado && !item.esPasado && handleSeleccionarFecha(item.fecha)} disabled={item.ocupado || item.esPasado}
+                    style={{ height: '40px', border: 'none', borderRadius: '4px', backgroundColor: item.ocupado ? '#fee2e2' : item.esPasado ? '#f3f4f6' : seleccionado ? '#d97706' : enRango ? '#fef3c7' : 'white', color: item.ocupado ? '#dc2626' : item.esPasado ? '#9ca3af' : seleccionado ? 'white' : '#1f2937', cursor: (item.ocupado || item.esPasado) ? 'not-allowed' : 'pointer', opacity: (item.ocupado || item.esPasado) ? 0.6 : 1 }}
+                  >{item.dia}</button>
                 )
               })}
             </div>
             
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '16px', fontSize: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: '#fee2e2', borderRadius: '4px', border: '1px solid #fca5a5' }}></div>
-                <span>Ocupado</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: '#d97706', borderRadius: '4px' }}></div>
-                <span>Seleccionado</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: '#fef3c7', borderRadius: '4px' }}></div>
-                <span>Rango</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px', border: '1px solid #d1d5db' }}></div>
-                <span>Pasado</span>
-              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '16px', height: '16px', backgroundColor: '#fee2e2', borderRadius: '4px' }}></div><span>Ocupado</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '16px', height: '16px', backgroundColor: '#d97706', borderRadius: '4px' }}></div><span>Seleccionado</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '16px', height: '16px', backgroundColor: '#fef3c7', borderRadius: '4px' }}></div><span>Rango</span></div>
             </div>
             
-            <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>
-              💡 Hacé clic en la fecha de entrada y luego en la de salida
-            </p>
+            <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>💡 Hacé clic en la fecha de entrada y luego en la de salida</p>
             
             {fechaEntrada && fechaSalida && (
-              <a
-                href={`https://wa.me/2494320917?text=${mensajeWhatsApp()}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'block',
-                  marginTop: '24px',
-                  padding: '16px',
-                  backgroundColor: '#25D366',
-                  color: 'white',
-                  textAlign: 'center',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  fontSize: '18px'
-                }}
-              >
-                📱 Reservar por WhatsApp
-              </a>
+              <a href={`https://wa.me/2494320917?text=${mensajeWhatsApp()}`} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'block', marginTop: '24px', padding: '16px', backgroundColor: '#25D366', color: 'white', textAlign: 'center', textDecoration: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '18px' }}
+              >📱 Reservar por WhatsApp</a>
             )}
           </div>
         </div>
