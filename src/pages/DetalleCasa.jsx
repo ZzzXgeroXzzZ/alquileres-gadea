@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import Mapa from '../components/Mapa'
 
 function DetalleCasa() {
   const { id } = useParams()
@@ -221,6 +222,15 @@ function DetalleCasa() {
                 <ul style={{ listStyle: 'none', padding: 0 }}>
                   {casa.reglas.map((r, i) => <li key={i} style={{ fontSize: '14px', color: '#4b5563', padding: '6px 0', borderBottom: '1px solid #fef3c7' }}>{r}</li>)}
                 </ul>
+              </div>
+            )}
+            
+            {/* UBICACIÓN Y MAPA */}
+            {casa.ubicacion && (
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>📍 Ubicación</h3>
+                <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>{casa.ubicacion}</p>
+                <Mapa latitud={casa.latitud} longitud={casa.longitud} nombre={casa.nombre} />
               </div>
             )}
             
