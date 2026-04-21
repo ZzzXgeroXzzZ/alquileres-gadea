@@ -16,7 +16,6 @@ function DetalleCasa() {
     async function cargarCasa() {
       setLoading(true)
       
-      // Cargar datos de la casa
       const { data: casaData, error: casaError } = await supabase
         .from('casas')
         .select('*')
@@ -24,21 +23,20 @@ function DetalleCasa() {
         .single()
       
       if (casaError) {
-        console.error('❌ Error cargando casa:', casaError)
+        console.error('Error cargando casa:', casaError)
         setLoading(false)
         return
       }
       
       setCasa(casaData)
       
-      // Cargar fechas bloqueadas
       const { data: fechasData, error: fechasError } = await supabase
         .from('fechas_bloqueadas')
         .select('fecha')
         .eq('casa_id', id)
       
       if (fechasError) {
-        console.error('❌ Error cargando fechas:', fechasError)
+        console.error('Error cargando fechas:', fechasError)
       } else {
         const fechas = fechasData.map(f => f.fecha)
         setFechasOcupadas(fechas)
@@ -66,7 +64,6 @@ function DetalleCasa() {
     )
   }
   
-  // Cambiar de mes
   const mesAnterior = () => {
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
   }
@@ -75,7 +72,6 @@ function DetalleCasa() {
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 1))
   }
   
-  // Generar calendario para el mes actual
   const generarCalendario = () => {
     const año = mesActual.getFullYear()
     const mes = mesActual.getMonth()
@@ -104,7 +100,6 @@ function DetalleCasa() {
   const diasCalendario = generarCalendario()
   const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
   
-  // Manejar selección de fechas
   const handleSeleccionarFecha = (fechaStr) => {
     const fecha = new Date(fechaStr)
     const hoy = new Date()
@@ -184,14 +179,11 @@ function DetalleCasa() {
       </header>
       
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-      
-      
-      {/* Carrusel de fotos */}
-<div style={{ marginBottom: '24px' }}>
-  <Carrusel fotos={casa.fotos} />
-</div>
-
-
+        {/* CARRUSEL DE FOTOS */}
+        <div style={{ marginBottom: '24px' }}>
+          <Carrusel fotos={casa.fotos} />
+        </div>
+        
         {/* Info y Calendario */}
         <div className="grid-container" style={{ 
           display: 'grid', 
@@ -211,12 +203,10 @@ function DetalleCasa() {
             <h2 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '16px', color: '#92400e' }}>📋 Detalles de la propiedad</h2>
             <p style={{ color: '#4b5563', marginBottom: '24px', lineHeight: '1.6' }}>{casa.descripcion}</p>
             
-            {/* Precio */}
             <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706', marginBottom: '24px' }}>
               ${casa.precio_por_noche?.toLocaleString('es-AR')} <span style={{ fontSize: '16px', fontWeight: 'normal', color: '#6b7280' }}>/ noche</span>
             </p>
             
-            {/* Servicios incluidos */}
             {casa.servicios?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
@@ -232,7 +222,6 @@ function DetalleCasa() {
               </div>
             )}
             
-            {/* Reglas de la casa */}
             {casa.reglas?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
@@ -248,7 +237,6 @@ function DetalleCasa() {
               </div>
             )}
             
-            {/* Ubicación */}
             {casa.ubicacion && (
               <div style={{ marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>📍 Ubicación</h3>
@@ -256,7 +244,6 @@ function DetalleCasa() {
               </div>
             )}
             
-            {/* Resumen de reserva */}
             {fechaEntrada && fechaSalida && (
               <div style={{ backgroundColor: '#fef7ed', padding: '16px', borderRadius: '8px', marginTop: '24px' }}>
                 <p style={{ fontWeight: '600', marginBottom: '8px', color: '#92400e' }}>📋 Resumen de tu estadía</p>
@@ -286,7 +273,6 @@ function DetalleCasa() {
           
           {/* Columna derecha - Calendario */}
           <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-            {/* Navegación de meses */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
               <button 
                 onClick={mesAnterior}
@@ -323,7 +309,6 @@ function DetalleCasa() {
               </button>
             </div>
             
-            {/* Días de la semana */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
               {nombresDias.map(dia => (
                 <div key={dia} style={{ textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>
@@ -332,7 +317,6 @@ function DetalleCasa() {
               ))}
             </div>
             
-            {/* Grid del calendario */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
               {diasCalendario.map((item, idx) => {
                 if (!item) return <div key={idx} style={{ height: '40px' }} />
@@ -382,7 +366,6 @@ function DetalleCasa() {
               })}
             </div>
             
-            {/* Leyenda */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '16px', fontSize: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '16px', height: '16px', backgroundColor: '#fee2e2', borderRadius: '4px', border: '1px solid #fca5a5' }}></div>
@@ -402,12 +385,10 @@ function DetalleCasa() {
               </div>
             </div>
             
-            {/* Instrucciones */}
             <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>
               💡 Hacé clic en la fecha de entrada y luego en la de salida
             </p>
             
-            {/* Botón WhatsApp */}
             {fechaEntrada && fechaSalida && (
               <a
                 href={`https://wa.me/2494320917?text=${mensajeWhatsApp()}`}
