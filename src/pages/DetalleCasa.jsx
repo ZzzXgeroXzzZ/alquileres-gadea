@@ -220,9 +220,9 @@ const handleReserva = async () => {
             <h2 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '16px', color: '#92400e' }}>📋 Detalles de la propiedad</h2>
             <p style={{ color: '#4b5563', marginBottom: '24px', lineHeight: '1.6' }}>{casa.descripcion}</p>
             
-            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706', marginBottom: '24px' }}>
-              ${casa.precio_por_noche?.toLocaleString('es-AR')} <span style={{ fontSize: '16px', fontWeight: 'normal', color: '#6b7280' }}>/ noche</span>
-            </p>
+            <p style={{ fontSize: '20px', color: '#d97706', marginBottom: '24px', fontWeight: '500' }}>
+  💰 Consultar precio por WhatsApp
+</p>
             
             {casa.servicios?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>

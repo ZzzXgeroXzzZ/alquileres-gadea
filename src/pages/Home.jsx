@@ -172,10 +172,9 @@ function Home() {
                     <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px', lineHeight: '1.4' }}>
                       {casa.descripcion?.slice(0, 80)}...
                     </p>
-                    <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#d97706' }}>
-                      ${casa.precio_por_noche?.toLocaleString('es-AR')} 
-                      <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#6b7280' }}> / noche</span>
-                    </p>
+                    <p style={{ fontSize: '16px', color: '#d97706', fontWeight: '500' }}>
+  💰 Consultar precio
+</p>
                     
                     <button style={{
                       width: '100%',
