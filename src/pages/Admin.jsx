@@ -14,57 +14,55 @@ function Admin() {
   const [fechasBloqueadas, setFechasBloqueadas] = useState([])
   const [nuevoPrecio, setNuevoPrecio] = useState('')
   const [nuevaDescripcion, setNuevaDescripcion] = useState('')
+  const [nuevoNombre, setNuevoNombre] = useState('')
   const [nuevaRegla, setNuevaRegla] = useState('')
   const [nuevoServicio, setNuevoServicio] = useState('')
-
- useEffect(() => {
-  // Verificar sesión al cargar
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setSesion(session)
-    if (session) cargarCasas()
+  const [mostrarFormNuevaCasa, setMostrarFormNuevaCasa] = useState(false)
+  const [nuevaCasa, setNuevaCasa] = useState({
+    nombre: '',
+    descripcion: '',
+    precio_por_noche: '',
+    ubicacion: ''
   })
 
-  // Escuchar cambios de autenticación
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    setSesion(session)
-    if (session) cargarCasas()
-  })
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSesion(session)
+      if (session) cargarCasas()
+    })
 
-  return () => subscription.unsubscribe()
-}, [])
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSesion(session)
+      if (session) cargarCasas()
+    })
 
-  // Cargar todas las casas
+    return () => subscription.unsubscribe()
+  }, [])
+
   async function cargarCasas() {
     const { data } = await supabase.from('casas').select('*').order('id')
     if (data) setCasas(data)
   }
 
-  // Cargar fechas bloqueadas de una casa
   async function cargarFechasBloqueadas(casaId) {
     const { data } = await supabase.from('fechas_bloqueadas').select('fecha').eq('casa_id', casaId)
     setFechasBloqueadas(data?.map(f => f.fecha) || [])
   }
 
-  // Login
   async function handleLogin(e) {
-  e.preventDefault()
-  setLoading(true)
-  setError('')
-  
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  
-  if (error) {
-    setError('Email o contraseña incorrectos')
-  } else {
-    // Actualizar el estado de sesión manualmente
-    setSesion(data.session)
-    // Cargar las casas
-    await cargarCasas()
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setError('Email o contraseña incorrectos')
+    } else {
+      setSesion(data.session)
+      await cargarCasas()
+    }
+    setLoading(false)
   }
-  
-  setLoading(false)
-}
-  // Logout
+
   async function handleLogout() {
     await supabase.auth.signOut()
     setSesion(null)
@@ -73,13 +71,11 @@ function Admin() {
     setCasas([])
   }
 
-  // Activar/Pausar casa
   async function toggleCasaActiva(id, estadoActual) {
     await supabase.from('casas').update({ esta_activa: !estadoActual }).eq('id', id)
     cargarCasas()
   }
 
-  // Actualizar precio
   async function actualizarPrecio(id) {
     if (!nuevoPrecio || nuevoPrecio <= 0) return
     await supabase.from('casas').update({ precio_por_noche: parseInt(nuevoPrecio) }).eq('id', id)
@@ -87,7 +83,6 @@ function Admin() {
     setNuevoPrecio('')
   }
 
-  // Actualizar descripción
   async function actualizarDescripcion(id) {
     if (!nuevaDescripcion.trim()) return
     await supabase.from('casas').update({ descripcion: nuevaDescripcion }).eq('id', id)
@@ -95,7 +90,13 @@ function Admin() {
     setNuevaDescripcion('')
   }
 
-  // Agregar regla
+  async function actualizarNombre(id) {
+    if (!nuevoNombre.trim()) return
+    await supabase.from('casas').update({ nombre: nuevoNombre }).eq('id', id)
+    cargarCasas()
+    setNuevoNombre('')
+  }
+
   async function agregarRegla(id, reglasActuales) {
     if (!nuevaRegla.trim()) return
     const nuevasReglas = [...reglasActuales, nuevaRegla]
@@ -104,14 +105,12 @@ function Admin() {
     setNuevaRegla('')
   }
 
-  // Eliminar regla
   async function eliminarRegla(id, reglasActuales, index) {
     const nuevasReglas = reglasActuales.filter((_, i) => i !== index)
     await supabase.from('casas').update({ reglas: nuevasReglas }).eq('id', id)
     cargarCasas()
   }
 
-  // Agregar servicio
   async function agregarServicio(id, serviciosActuales) {
     if (!nuevoServicio.trim()) return
     const nuevosServicios = [...serviciosActuales, nuevoServicio]
@@ -120,14 +119,12 @@ function Admin() {
     setNuevoServicio('')
   }
 
-  // Eliminar servicio
   async function eliminarServicio(id, serviciosActuales, index) {
     const nuevosServicios = serviciosActuales.filter((_, i) => i !== index)
     await supabase.from('casas').update({ servicios: nuevosServicios }).eq('id', id)
     cargarCasas()
   }
 
-  // Bloquear/Desbloquear fecha
   async function toggleFechaBloqueada(casaId, fecha) {
     const existe = fechasBloqueadas.includes(fecha)
     if (existe) {
@@ -139,13 +136,51 @@ function Admin() {
     }
   }
 
-  // Navegación del calendario
+  async function crearCasa() {
+    if (!nuevaCasa.nombre || !nuevaCasa.precio_por_noche) {
+      alert('Nombre y precio son obligatorios')
+      return
+    }
+    
+    const { error } = await supabase.from('casas').insert({
+      nombre: nuevaCasa.nombre,
+      descripcion: nuevaCasa.descripcion || 'Nueva propiedad',
+      precio_por_noche: parseInt(nuevaCasa.precio_por_noche),
+      ubicacion: nuevaCasa.ubicacion || '',
+      fotos: ['https://via.placeholder.com/400x300?text=Agregar+foto'],
+      reglas: [],
+      servicios: [],
+      esta_activa: true
+    })
+    
+    if (error) {
+      alert('Error al crear la casa: ' + error.message)
+    } else {
+      cargarCasas()
+      setMostrarFormNuevaCasa(false)
+      setNuevaCasa({ nombre: '', descripcion: '', precio_por_noche: '', ubicacion: '' })
+    }
+  }
+
+  async function eliminarCasa(id, nombre) {
+    if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
+      return
+    }
+    
+    await supabase.from('fechas_bloqueadas').delete().eq('casa_id', id)
+    const { error } = await supabase.from('casas').delete().eq('id', id)
+    
+    if (error) {
+      alert('Error al eliminar: ' + error.message)
+    } else {
+      cargarCasas()
+    }
+  }
+
   const mesAnterior = () => setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
   const mesSiguiente = () => setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 1))
-
   const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
-  // Generar días del calendario
   const generarCalendario = () => {
     const año = mesActual.getFullYear()
     const mes = mesActual.getMonth()
@@ -227,7 +262,6 @@ function Admin() {
   // PANTALLA DE ADMINISTRACIÓN
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fef7ed' }}>
-      {/* Header */}
       <header style={{ backgroundColor: '#92400e', color: 'white', padding: 16, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 20, fontWeight: 'bold' }}>🏠 Panel Administrador - Alquileres Gadea</h1>
@@ -240,12 +274,87 @@ function Admin() {
         </div>
       </header>
 
-      {/* Contenido */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
         <Link to="/" style={{ color: '#d97706', textDecoration: 'none', fontSize: 14 }}>← Ver sitio público</Link>
         
-        <h2 style={{ fontSize: 22, marginTop: 24, marginBottom: 20, color: '#92400e' }}>Mis Propiedades</h2>
+        {/* Botón Nueva Casa */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 20 }}>
+          <h2 style={{ fontSize: 22, color: '#92400e', margin: 0 }}>Mis Propiedades</h2>
+          <button
+            onClick={() => setMostrarFormNuevaCasa(!mostrarFormNuevaCasa)}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: 16
+            }}
+          >
+            {mostrarFormNuevaCasa ? '❌ Cancelar' : '➕ Nueva Casa'}
+          </button>
+        </div>
 
+        {/* Formulario Nueva Casa */}
+        {mostrarFormNuevaCasa && (
+          <div style={{ backgroundColor: 'white', padding: 20, borderRadius: 12, marginBottom: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+            <h3 style={{ fontSize: 18, fontWeight: '600', color: '#92400e', marginBottom: 16 }}>🏠 Agregar nueva propiedad</h3>
+            
+            <div style={{ display: 'grid', gap: 12 }}>
+              <input
+                type="text"
+                placeholder="Nombre de la casa *"
+                value={nuevaCasa.nombre}
+                onChange={e => setNuevaCasa({...nuevaCasa, nombre: e.target.value})}
+                style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Descripción"
+                value={nuevaCasa.descripcion}
+                onChange={e => setNuevaCasa({...nuevaCasa, descripcion: e.target.value})}
+                style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
+              />
+              
+              <input
+                type="number"
+                placeholder="Precio por noche *"
+                value={nuevaCasa.precio_por_noche}
+                onChange={e => setNuevaCasa({...nuevaCasa, precio_por_noche: e.target.value})}
+                style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Ubicación"
+                value={nuevaCasa.ubicacion}
+                onChange={e => setNuevaCasa({...nuevaCasa, ubicacion: e.target.value})}
+                style={{ padding: 12, borderRadius: 6, border: '1px solid #d1d5db' }}
+              />
+              
+              <button
+                onClick={crearCasa}
+                style={{
+                  padding: 14,
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: 16
+                }}
+              >
+                ✅ Crear propiedad
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de casas */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {casas.map(casa => (
             <div key={casa.id} style={{ backgroundColor: 'white', padding: 20, borderRadius: 12, boxShadow: '0 2px 4px rgba(0,0,0,0.05)', opacity: casa.esta_activa ? 1 : 0.6 }}>
@@ -261,11 +370,10 @@ function Admin() {
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: '600', color: '#1f2937' }}>{casa.nombre}</h3>
                     <p style={{ fontSize: 14, color: '#6b7280' }}>${casa.precio_por_noche?.toLocaleString('es-AR')} / noche</p>
-                    <p style={{ fontSize: 12, color: '#ef4444' }}>{fechasBloqueadas.length} fechas bloqueadas</p>
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button
                     onClick={() => toggleCasaActiva(casa.id, casa.esta_activa)}
                     style={{
@@ -302,6 +410,21 @@ function Admin() {
                   >
                     {casaEditando === casa.id ? 'Cerrar' : '✏️ Editar'}
                   </button>
+                  
+                  <button
+                    onClick={() => eliminarCasa(casa.id, casa.nombre)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
+                  >
+                    🗑️ Eliminar
+                  </button>
                 </div>
               </div>
 
@@ -309,6 +432,26 @@ function Admin() {
               {casaEditando === casa.id && (
                 <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid #fef3c7' }}>
                   
+                  {/* Editar nombre */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>📛 Nombre</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        type="text"
+                        placeholder={`Actual: ${casa.nombre}`}
+                        value={nuevoNombre}
+                        onChange={e => setNuevoNombre(e.target.value)}
+                        style={{ flex: 1, padding: 10, borderRadius: 6, border: '1px solid #d1d5db' }}
+                      />
+                      <button
+                        onClick={() => actualizarNombre(casa.id)}
+                        style={{ padding: '10px 20px', backgroundColor: '#d97706', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                      >
+                        Actualizar
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Editar precio */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>💰 Precio por noche</label>
