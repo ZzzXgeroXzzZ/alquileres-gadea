@@ -146,6 +146,23 @@ function DetalleCasa() {
     return encodeURIComponent(texto)
   }
 
+
+const handleReserva = async () => {
+  // Guardar consulta en Supabase
+  await supabase.from('consultas').insert({
+    casa_id: casa.id,
+    casa_nombre: casa.nombre,
+    fecha_entrada: fechaEntrada,
+    fecha_salida: fechaSalida,
+    noches: noches,
+    estado: 'Pendiente'
+  })
+  
+  // Abrir WhatsApp
+  window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
+}
+
+
   const fotos = casa.fotos || []
   const siguienteFoto = () => setIndiceFoto((indiceFoto + 1) % fotos.length)
   const anteriorFoto = () => setIndiceFoto((indiceFoto - 1 + fotos.length) % fotos.length)
@@ -283,10 +300,26 @@ function DetalleCasa() {
             <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>💡 Hacé clic en la fecha de entrada y luego en la de salida</p>
             
             {fechaEntrada && fechaSalida && (
-              <a href={`https://wa.me/2494320917?text=${mensajeWhatsApp()}`} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'block', marginTop: '24px', padding: '16px', backgroundColor: '#25D366', color: 'white', textAlign: 'center', textDecoration: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '18px' }}
-              >📱 Reservar por WhatsApp</a>
-            )}
+  <button
+    onClick={handleReserva}
+    style={{
+      display: 'block',
+      width: '100%',
+      marginTop: '24px',
+      padding: '16px',
+      backgroundColor: '#25D366',
+      color: 'white',
+      textAlign: 'center',
+      border: 'none',
+      borderRadius: '8px',
+      fontWeight: '600',
+      fontSize: '18px',
+      cursor: 'pointer'
+    }}
+  >
+    📱 Reservar por WhatsApp
+  </button>
+)}
           </div>
         </div>
       </main>
