@@ -17,7 +17,6 @@ function Admin() {
   const [nuevaRegla, setNuevaRegla] = useState('')
   const [nuevoServicio, setNuevoServicio] = useState('')
 
-  // Verificar sesión al cargar
  useEffect(() => {
   // Verificar sesión al cargar
   supabase.auth.getSession().then(({ data: { session } }) => {
