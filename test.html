@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Supabase</title>
+</head>
+<body>
+  <h1>Probando Supabase</h1>
+  <div id="resultado">Cargando...</div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    const supabaseUrl = 'https://ayrihokzrajufnthjndx.supabase.co'
+    const supabaseAnonKey = sb_publishable_ooR40wIskwiEOI1sk5p_8Q_qeQa4s_E
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    
+    const { data, error } = await supabase.from('casas').select('*')
+    
+    if (error) {
+      document.getElementById('resultado').innerHTML = '❌ Error: ' + error.message
+    } else {
+      document.getElementById('resultado').innerHTML = '✅ Conectado! Casas: ' + data.length
+    }
+  </script>
+</body>
+</html>
