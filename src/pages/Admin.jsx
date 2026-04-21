@@ -189,7 +189,15 @@ function Admin() {
     
     setSubiendoFoto(true)
     
-    const nombreArchivo = `${casaId}_${Date.now()}_${archivo.name}`
+   // Limpiar nombre de archivo (quitar caracteres especiales)
+const nombreLimpio = archivo.name
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+  .replace(/ñ/g, 'n')              // ñ -> n
+  .replace(/Ñ/g, 'N')              // Ñ -> N
+  .replace(/[^a-zA-Z0-9.]/g, '_')  // Cualquier otro carácter raro -> _
+  
+const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
     
     const { error: uploadError } = await supabase.storage
       .from('fotos-casas')
