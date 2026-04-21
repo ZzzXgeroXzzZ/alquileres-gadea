@@ -19,6 +19,7 @@ function Admin() {
   const [nuevoServicio, setNuevoServicio] = useState('')
   const [mostrarFormNuevaCasa, setMostrarFormNuevaCasa] = useState(false)
   const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [vistaAdmin, setVistaAdmin] = useState('casas') // 'casas' o 'consultas'
   const [nuevaCasa, setNuevaCasa] = useState({
   nombre: '',
   descripcion: '',
@@ -347,6 +348,38 @@ function Admin() {
       <header style={{ backgroundColor: '#92400e', color: 'white', padding: 16, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 20, fontWeight: 'bold' }}>🏠 Panel Administrador - Alquileres Gadea</h1>
+
+<div style={{ display: 'flex', gap: '8px' }}>
+  <button
+    onClick={() => setVistaAdmin('casas')}
+    style={{
+      padding: '8px 16px',
+      backgroundColor: vistaAdmin === 'casas' ? '#d97706' : '#fef3c7',
+      color: vistaAdmin === 'casas' ? 'white' : '#92400e',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontWeight: '500'
+    }}
+  >
+    🏠 Casas
+  </button>
+  <button
+    onClick={() => setVistaAdmin('consultas')}
+    style={{
+      padding: '8px 16px',
+      backgroundColor: vistaAdmin === 'consultas' ? '#d97706' : '#fef3c7',
+      color: vistaAdmin === 'consultas' ? 'white' : '#92400e',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontWeight: '500'
+    }}
+  >
+    📋 Consultas
+  </button>
+</div>          
+
           <button
             onClick={handleLogout}
             style={{ backgroundColor: '#d97706', color: 'white', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: '500' }}
@@ -359,6 +392,12 @@ function Admin() {
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
         <Link to="/" style={{ color: '#d97706', textDecoration: 'none', fontSize: 14 }}>← Ver sitio público</Link>
         
+       {vistaAdmin === 'consultas' ? (
+  <VistaConsultas />
+) : (
+  <>
+
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 20 }}>
           <h2 style={{ fontSize: 22, color: '#92400e', margin: 0 }}>Mis Propiedades</h2>
           <button
@@ -820,9 +859,92 @@ function Admin() {
             </div>
           ))}
         </div>
+          </>
+)}
       </main>
     </div>
   )
 }
 
+// Componente para mostrar las consultas
+function VistaConsultas() {
+  const [consultas, setConsultas] = useState([])
+  const { supabase } = require('../lib/supabaseClient') // O importalo arriba
+  
+  useEffect(() => {
+    cargarConsultas()
+  }, [])
+  
+  async function cargarConsultas() {
+    const { data } = await supabase
+      .from('consultas')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) setConsultas(data)
+  }
+  
+  async function cambiarEstado(id, nuevoEstado) {
+    await supabase.from('consultas').update({ estado: nuevoEstado }).eq('id', id)
+    cargarConsultas()
+  }
+  
+  return (
+    <div>
+      <h2 style={{ fontSize: '22px', color: '#92400e', marginBottom: '20px' }}>📋 Consultas recibidas</h2>
+      
+      {consultas.length === 0 ? (
+        <p style={{ color: '#6b7280' }}>No hay consultas todavía.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {consultas.map(consulta => (
+            <div key={consulta.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h3 style={{ fontWeight: '600', color: '#1f2937' }}>{consulta.casa_nombre}</h3>
+                <span style={{
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  backgroundColor: 
+                    consulta.estado === 'Pendiente' ? '#fef3c7' :
+                    consulta.estado === 'Confirmada' ? '#d1fae5' :
+                    '#f3f4f6',
+                  color:
+                    consulta.estado === 'Pendiente' ? '#92400e' :
+                    consulta.estado === 'Confirmada' ? '#065f46' :
+                    '#6b7280'
+                }}>
+                  {consulta.estado}
+                </span>
+              </div>
+              
+              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
+                📅 {consulta.fecha_entrada} → {consulta.fecha_salida} ({consulta.noches} noches)
+              </p>
+              
+              <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+                🕐 {new Date(consulta.created_at).toLocaleString('es-AR')}
+              </p>
+              
+              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <button
+                  onClick={() => cambiarEstado(consulta.id, 'Confirmada')}
+                  style={{ padding: '6px 12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  ✅ Confirmar
+                </button>
+                <button
+                  onClick={() => cambiarEstado(consulta.id, 'Cancelada')}
+                  style={{ padding: '6px 12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  ❌ Cancelar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 export default Admin
