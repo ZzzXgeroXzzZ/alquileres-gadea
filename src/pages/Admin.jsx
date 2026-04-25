@@ -936,14 +936,32 @@ function VistaConsultas() {
     cargarConsultas()
   }
   
-  async function cancelarConsulta(id) {
-    await supabase
-      .from('consultas')
-      .update({ estado: 'Cancelada' })
-      .eq('id', id)
+  async function cancelarConsulta(consulta) {
+  // 1. Cambiar estado a Cancelada
+  await supabase
+    .from('consultas')
+    .update({ estado: 'Cancelada' })
+    .eq('id', consulta.id)
+  
+  // 2. Desbloquear las fechas si la consulta estaba Confirmada
+  if (consulta.estado === 'Confirmada' && consulta.fecha_entrada && consulta.fecha_salida && consulta.casa_id) {
+    const entrada = new Date(consulta.fecha_entrada)
+    const salida = new Date(consulta.fecha_salida)
+    const fecha = new Date(entrada)
     
-    cargarConsultas()
+    while (fecha < salida) {
+      await supabase
+        .from('fechas_bloqueadas')
+        .delete()
+        .eq('casa_id', consulta.casa_id)
+        .eq('fecha', fecha.toISOString().split('T')[0])
+      
+      fecha.setDate(fecha.getDate() + 1)
+    }
   }
+  
+  cargarConsultas()
+}
   
   return (
     <div>
