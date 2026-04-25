@@ -147,7 +147,7 @@ function DetalleCasa() {
     return encodeURIComponent(texto)
   }
 
- const handleReserva = async () => {
+  const handleReserva = async () => {
   await supabase.from('consultas').insert({
     casa_id: casa.id,
     casa_nombre: casa.nombre,
@@ -176,10 +176,6 @@ function DetalleCasa() {
   
   window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
 }
-    
-    // Abrir WhatsApp
-    window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
-  }
 
   const fotos = casa.fotos || []
   const siguienteFoto = () => setIndiceFoto((indiceFoto + 1) % fotos.length)
