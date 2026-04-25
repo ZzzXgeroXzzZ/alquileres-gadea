@@ -401,7 +401,7 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
         <Link to="/" style={{ color: '#d97706', textDecoration: 'none', fontSize: 14 }}>← Ver sitio público</Link>
         
        {vistaAdmin === 'consultas' ? (
-  <VistaConsulqtas />
+  <VistaConsultas />
 ) : (
   <>
 
