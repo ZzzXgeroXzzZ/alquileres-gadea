@@ -147,16 +147,35 @@ function DetalleCasa() {
     return encodeURIComponent(texto)
   }
 
-  const handleReserva = async () => {
-    // Guardar consulta en Supabase
-    await supabase.from('consultas').insert({
-      casa_id: casa.id,
-      casa_nombre: casa.nombre,
-      fecha_entrada: fechaEntrada,
-      fecha_salida: fechaSalida,
-      noches: noches,
-      estado: 'Pendiente'
-    })
+ const handleReserva = async () => {
+  await supabase.from('consultas').insert({
+    casa_id: casa.id,
+    casa_nombre: casa.nombre,
+    fecha_entrada: fechaEntrada,
+    fecha_salida: fechaSalida,
+    noches: noches,
+    estado: 'Pendiente'
+  })
+  
+  try {
+    await emailjs.send(
+      'service_mgdrc3f',
+      'template_6jehgyr',
+      {
+        to_email: 'gerogadea25@gmail.com',
+        casa_nombre: casa.nombre,
+        fecha_entrada: new Date(fechaEntrada).toLocaleDateString('es-AR'),
+        fecha_salida: new Date(fechaSalida).toLocaleDateString('es-AR'),
+        noches: noches
+      },
+      'nV4pApm_Se02Oofti'
+    )
+  } catch (error) {
+    console.log('Error enviando email:', error)
+  }
+  
+  window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
+}
     
     // Abrir WhatsApp
     window.open(`https://wa.me/2494320917?text=${mensajeWhatsApp()}`, '_blank')
