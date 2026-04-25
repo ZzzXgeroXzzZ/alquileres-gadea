@@ -401,7 +401,7 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
         <Link to="/" style={{ color: '#d97706', textDecoration: 'none', fontSize: 14 }}>← Ver sitio público</Link>
         
        {vistaAdmin === 'consultas' ? (
-  <VistaConsultas />
+  <VistaConsulqtas />
 ) : (
   <>
 
@@ -877,7 +877,8 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
 // Componente para mostrar las consultas
 function VistaConsultas() {
   const [consultas, setConsultas] = useState([])
-  const { supabase } = require('../lib/supabaseClient') // O importalo arriba
+  const [precioInput, setPrecioInput] = useState({})
+  const [obsInput, setObsInput] = useState({})
   
   useEffect(() => {
     cargarConsultas()
@@ -891,8 +892,56 @@ function VistaConsultas() {
     if (data) setConsultas(data)
   }
   
-  async function cambiarEstado(id, nuevoEstado) {
-    await supabase.from('consultas').update({ estado: nuevoEstado }).eq('id', id)
+  async function confirmarConsulta(consulta) {
+    const precio = precioInput[consulta.id] || 0
+    const observacion = obsInput[consulta.id] || ''
+    
+    // 1. Actualizar la consulta en Supabase
+    await supabase
+      .from('consultas')
+      .update({ 
+        estado: 'Confirmada',
+        precio_final: parseInt(precio),
+        observacion: observacion
+      })
+      .eq('id', consulta.id)
+    
+    // 2. Bloquear las fechas en el calendario
+    if (consulta.fecha_entrada && consulta.fecha_salida && consulta.casa_id) {
+      const entrada = new Date(consulta.fecha_entrada)
+      const salida = new Date(consulta.fecha_salida)
+      
+      const fechasABloquear = []
+      const fechaActual = new Date(entrada)
+      
+      while (fechaActual < salida) {
+        fechasABloquear.push(fechaActual.toISOString().split('T')[0])
+        fechaActual.setDate(fechaActual.getDate() + 1)
+      }
+      
+      // Insertar cada fecha bloqueada
+      for (const fecha of fechasABloquear) {
+        await supabase.from('fechas_bloqueadas').insert({
+          casa_id: consulta.casa_id,
+          fecha: fecha
+        }).select() // Ignorar errores si ya existe
+      }
+    }
+    
+    // Limpiar inputs
+    setPrecioInput({ ...precioInput, [consulta.id]: '' })
+    setObsInput({ ...obsInput, [consulta.id]: '' })
+    
+    // Recargar consultas
+    cargarConsultas()
+  }
+  
+  async function cancelarConsulta(id) {
+    await supabase
+      .from('consultas')
+      .update({ estado: 'Cancelada' })
+      .eq('id', id)
+    
     cargarConsultas()
   }
   
@@ -907,7 +956,7 @@ function VistaConsultas() {
           {consultas.map(consulta => (
             <div key={consulta.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ fontWeight: '600', color: '#1f2937' }}>{consulta.casa_nombre}</h3>
+                <h3 style={{ fontWeight: '600', color: '#1f2937' }}>🏠 {consulta.casa_nombre}</h3>
                 <span style={{
                   padding: '4px 12px',
                   borderRadius: '20px',
@@ -930,24 +979,63 @@ function VistaConsultas() {
                 📅 {consulta.fecha_entrada} → {consulta.fecha_salida} ({consulta.noches} noches)
               </p>
               
+              {/* Mostrar precio y observación si ya está confirmada */}
+              {consulta.estado === 'Confirmada' && (
+                <>
+                  {consulta.precio_final && (
+                    <p style={{ fontSize: '14px', color: '#059669', fontWeight: '600' }}>
+                      💰 Precio cobrado: ${consulta.precio_final?.toLocaleString('es-AR')}
+                    </p>
+                  )}
+                  {consulta.observacion && (
+                    <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+                      📝 {consulta.observacion}
+                    </p>
+                  )}
+                </>
+              )}
+              
               <p style={{ fontSize: '12px', color: '#9ca3af' }}>
                 🕐 {new Date(consulta.created_at).toLocaleString('es-AR')}
               </p>
               
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button
-                  onClick={() => cambiarEstado(consulta.id, 'Confirmada')}
-                  style={{ padding: '6px 12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                >
-                  ✅ Confirmar
-                </button>
-                <button
-                  onClick={() => cambiarEstado(consulta.id, 'Cancelada')}
-                  style={{ padding: '6px 12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                >
-                  ❌ Cancelar
-                </button>
-              </div>
+              {/* Campos para completar al confirmar */}
+              {consulta.estado === 'Pendiente' && (
+                <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  <input
+                    type="number"
+                    placeholder="Precio final $"
+                    value={precioInput[consulta.id] || ''}
+                    onChange={(e) => setPrecioInput({...precioInput, [consulta.id]: e.target.value})}
+                    style={{ flex: '1 1 120px', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Observación (opcional)"
+                    value={obsInput[consulta.id] || ''}
+                    onChange={(e) => setObsInput({...obsInput, [consulta.id]: e.target.value})}
+                    style={{ flex: '2 1 200px', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px' }}
+                  />
+                </div>
+              )}
+              
+              {/* Botones de acción */}
+              {consulta.estado === 'Pendiente' && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  <button
+                    onClick={() => confirmarConsulta(consulta)}
+                    style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    ✅ Confirmar y bloquear fechas
+                  </button>
+                  <button
+                    onClick={() => cancelarConsulta(consulta.id)}
+                    style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    ❌ Cancelar
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
