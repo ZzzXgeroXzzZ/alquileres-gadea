@@ -916,24 +916,21 @@ function VistaConsultas() {
   }
   
   async function confirmarConsulta(consulta) {
-    const precio = precioInput[consulta.id] || 0
-    const observacion = obsInput[consulta.id] || ''
-    const codigo = 'GAD-' + Math.random().toString(36).substring(2, 8).toUpperCase()
-    const telefono = telInput[consulta.id] || ''
-    
-    // Función para descargar consultas en Excel (CSV)
+  const precio = precioInput[consulta.id] || 0
+  const observacion = obsInput[consulta.id] || ''
+  const codigo = 'GAD-' + Math.random().toString(36).substring(2, 8).toUpperCase()
 
-    // 1. Actualizar la consulta en Supabase
-    await supabase
-  .from('consultas')
-  .update({ 
-    estado: 'Confirmada',
-    precio_final: parseInt(precio),
-    observacion: observacion,
-    codigo: codigo
-  })
-      .eq('id', consulta.id)
-    
+  await supabase
+    .from('consultas')
+    .update({ 
+      estado: 'Confirmada',
+      precio_final: parseInt(precio),
+      observacion: observacion,
+      codigo: codigo
+    })
+    .eq('id', consulta.id)
+  
+  // Bloquear fechas...
     // 2. Bloquear las fechas en el calendario
     if (consulta.fecha_entrada && consulta.fecha_salida && consulta.casa_id) {
       const entrada = new Date(consulta.fecha_entrada)
