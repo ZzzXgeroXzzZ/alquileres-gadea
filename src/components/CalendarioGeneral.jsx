@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { Link } from 'react-router-dom'
 
 function CalendarioGeneral() {
   const [disponibilidad, setDisponibilidad] = useState({})
@@ -95,30 +94,26 @@ function CalendarioGeneral() {
           {generarCalendario().map((item, idx) => {
             if (!item) return <div key={idx} style={{ height: '40px' }} />
             return (
-              <Link
-                key={idx}
-                to={item.esPasado ? '#' : `/casa/1`}
-                style={{ textDecoration: 'none' }}
-                onClick={(e) => { if (item.esPasado) e.preventDefault() }}
-              >
-                <div style={{
-                  height: '40px',
-                  borderRadius: '6px',
-                  backgroundColor: item.esPasado ? '#f3f4f6' : item.color === 'rojo' ? '#fee2e2' : item.color === 'amarillo' ? '#fef3c7' : '#d1fae5',
-                  border: item.color === 'rojo' ? '2px solid #dc2626' : item.color === 'amarillo' ? '2px solid #d97706' : '1px solid #10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: item.esPasado ? '#9ca3af' : item.color === 'rojo' ? '#dc2626' : item.color === 'amarillo' ? '#92400e' : '#065f46',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: item.esPasado ? 'not-allowed' : 'pointer',
-                  opacity: item.esPasado ? 0.5 : 1,
-                  transition: 'all 0.2s'
-                }}>
-                  {item.dia}
-                </div>
-              </Link>
+             <div
+  key={idx}
+  style={{
+    height: '40px',
+    borderRadius: '6px',
+    backgroundColor: item.esPasado ? '#f3f4f6' : item.color === 'rojo' ? '#fee2e2' : item.color === 'amarillo' ? '#fef3c7' : '#d1fae5',
+    border: item.color === 'rojo' ? '2px solid #dc2626' : item.color === 'amarillo' ? '2px solid #d97706' : '1px solid #10b981',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: item.esPasado ? '#9ca3af' : item.color === 'rojo' ? '#dc2626' : item.color === 'amarillo' ? '#92400e' : '#065f46',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: item.esPasado ? 'not-allowed' : 'default',
+    opacity: item.esPasado ? 0.5 : 1,
+    transition: 'all 0.2s'
+  }}
+>
+  {item.dia}
+</div>
             )
           })}
         </div>
