@@ -251,9 +251,23 @@ function DetalleCasa() {
             <h2 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '16px', color: '#92400e' }}>📋 Detalles de la propiedad</h2>
             <p style={{ color: '#4b5563', marginBottom: '24px', lineHeight: '1.6' }}>{casa.descripcion}</p>
             
-            <p style={{ fontSize: '20px', color: '#d97706', marginBottom: '24px', fontWeight: '500' }}>
-              💰 Consultar precio por WhatsApp
-            </p>
+           <div style={{ 
+  backgroundColor: '#fef3c7', 
+  padding: '16px', 
+  borderRadius: '8px', 
+  marginBottom: '24px',
+  border: '1px solid #d97706'
+}}>
+  <p style={{ fontSize: '16px', color: '#92400e', fontWeight: '600', marginBottom: '8px' }}>
+    💰 Precios por temporada
+  </p>
+  <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.5', marginBottom: '12px' }}>
+    El precio varía según la temporada (alta, media o baja). Consultanos por WhatsApp para obtener el valor exacto para tus fechas.
+  </p>
+  <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+    📅 Temporada alta: Dic-Feb | Media: Mar, Jul, Nov | Baja: Resto del año
+  </p>
+</div>
             
             {casa.servicios?.length > 0 && (
               <div style={{ marginBottom: '24px' }}>
