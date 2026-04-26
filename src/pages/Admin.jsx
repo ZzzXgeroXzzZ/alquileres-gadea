@@ -414,10 +414,12 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
         <Link to="/" style={{ color: '#d97706', textDecoration: 'none', fontSize: 14 }}>← Ver sitio público</Link>
-        
-       {vistaAdmin === 'estadisticas' ? <Estadisticas /> : vistaAdmin === 'consultas' ? (
-  <VistaConsultas />
-) : (
+     
+     {vistaAdmin === 'estadisticas' ? (
+    <Estadisticas />
+  ) : vistaAdmin === 'consultas' ? (
+    <VistaConsultas />
+  ) : (
   <>
 
 
