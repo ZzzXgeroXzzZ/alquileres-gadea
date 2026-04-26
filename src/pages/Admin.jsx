@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Link } from 'react-router-dom'
+import Estadisticas from '../components/Estadisticas'
 
 function Admin() {
   const [email, setEmail] = useState('')
@@ -358,34 +359,48 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
           <h1 style={{ fontSize: 20, fontWeight: 'bold' }}>🏠 Panel Administrador - Alquileres Gadea</h1>
 
 <div style={{ display: 'flex', gap: '8px' }}>
-  <button
-    onClick={() => setVistaAdmin('casas')}
-    style={{
-      padding: '8px 16px',
-      backgroundColor: vistaAdmin === 'casas' ? '#d97706' : '#fef3c7',
-      color: vistaAdmin === 'casas' ? 'white' : '#92400e',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontWeight: '500'
-    }}
-  >
-    🏠 Casas
-  </button>
-  <button
-    onClick={() => setVistaAdmin('consultas')}
-    style={{
-      padding: '8px 16px',
-      backgroundColor: vistaAdmin === 'consultas' ? '#d97706' : '#fef3c7',
-      color: vistaAdmin === 'consultas' ? 'white' : '#92400e',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontWeight: '500'
-    }}
-  >
-    📋 Consultas
-  </button>
+ <button
+  onClick={() => setVistaAdmin('casas')}
+  style={{
+    padding: '8px 16px',
+    backgroundColor: vistaAdmin === 'casas' ? '#d97706' : '#fef3c7',
+    color: vistaAdmin === 'casas' ? 'white' : '#92400e',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500'
+  }}
+>
+  🏠 Casas
+</button>
+<button
+  onClick={() => setVistaAdmin('consultas')}
+  style={{
+    padding: '8px 16px',
+    backgroundColor: vistaAdmin === 'consultas' ? '#d97706' : '#fef3c7',
+    color: vistaAdmin === 'consultas' ? 'white' : '#92400e',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500'
+  }}
+>
+  📋 Consultas
+</button>
+<button
+  onClick={() => setVistaAdmin('estadisticas')}
+  style={{
+    padding: '8px 16px',
+    backgroundColor: vistaAdmin === 'estadisticas' ? '#d97706' : '#fef3c7',
+    color: vistaAdmin === 'estadisticas' ? 'white' : '#92400e',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500'
+  }}
+>
+  📊 Estadísticas
+</button>
 </div>          
 
           <button
