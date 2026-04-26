@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import FAQ from '../components/FAQ'
+import CalendarioGeneral from '../components/CalendarioGeneral'
 
 function Home() {
   const [casas, setCasas] = useState([])
@@ -197,6 +198,7 @@ function Home() {
           </div>
         )}
 
+        <CalendarioGeneral />
         <FAQ />
       </main>
     </div>
