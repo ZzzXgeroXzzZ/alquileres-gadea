@@ -281,6 +281,47 @@ function DetalleCasa() {
                 <Mapa latitud={casa.latitud} longitud={casa.longitud} nombre={casa.nombre} />
               </div>
             )}
+
+
+            {/* Botón Compartir */}
+<div style={{ marginBottom: '24px' }}>
+  <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>📤 Compartir propiedad</h3>
+  <button
+    onClick={() => {
+      const url = window.location.href
+      const texto = `Mirá este alquiler: ${casa.nombre}`
+      
+      // Usar la API nativa de compartir (funciona en celular y PC con Chrome/Edge)
+      if (navigator.share) {
+        navigator.share({ title: casa.nombre, text: texto, url: url })
+      } else {
+        // Si no soporta, copiar al portapapeles
+        navigator.clipboard.writeText(url)
+        alert('✅ Link copiado al portapapeles')
+      }
+    }}
+    style={{
+      width: '100%',
+      padding: '12px',
+      backgroundColor: '#fef3c7',
+      color: '#92400e',
+      border: '2px solid #d97706',
+      borderRadius: '8px',
+      fontSize: '16px',
+      fontWeight: '500',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px'
+    }}
+  >
+    📤 Compartir esta propiedad
+  </button>
+  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px', textAlign: 'center' }}>
+    WhatsApp • Facebook • Copiar link • y más
+  </p>
+</div>
             
             {fechaEntrada && fechaSalida && (
               <div style={{ backgroundColor: '#fef7ed', padding: '16px', borderRadius: '8px', marginTop: '24px' }}>
