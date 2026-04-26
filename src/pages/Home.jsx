@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import FAQ from '../components/FAQ'
 import CalendarioGeneral from '../components/CalendarioGeneral'
+import MapaGeneral from '../components/MapaGeneral'
 
 function Home() {
   const [casas, setCasas] = useState([])
@@ -198,6 +199,7 @@ function Home() {
           </div>
         )}
 
+        <MapaGeneral />
         <CalendarioGeneral />
         <FAQ />
       </main>
