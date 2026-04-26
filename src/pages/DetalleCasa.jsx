@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import Mapa from '../components/Mapa'
+import Resenas from '../components/Resenas'
 
 function DetalleCasa() {
   const { id } = useParams()
@@ -295,6 +296,9 @@ function DetalleCasa() {
                 <Mapa latitud={casa.latitud} longitud={casa.longitud} nombre={casa.nombre} />
               </div>
             )}
+
+            {/* RESEÑAS */}
+<Resenas casaId={casa.id} />
 
 
             {/* Botón Compartir */}
