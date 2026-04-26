@@ -747,6 +747,85 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
                       <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 12 }}>
                         La primera foto será la principal
                       </span>
+                      
+                  {/* 🎥 Sección de videos */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontWeight: '600', color: '#92400e', display: 'block', marginBottom: 8 }}>🎥 Videos</label>
+                    
+                    {/* Link de YouTube */}
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ fontSize: '13px', color: '#6b7280', display: 'block', marginBottom: 4 }}>Link de YouTube (recomendado)</label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          type="text"
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          defaultValue={casa.video_url || ''}
+                          onBlur={async (e) => {
+                            await supabase.from('casas').update({ video_url: e.target.value || null }).eq('id', casa.id)
+                            cargarCasas()
+                          }}
+                          style={{ flex: 1, padding: 10, borderRadius: 6, border: '1px solid #d1d5db' }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Subir video corto */}
+                    <div>
+                      <label style={{ fontSize: '13px', color: '#6b7280', display: 'block', marginBottom: 4 }}>O subir video corto (máx. 50 MB)</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <input
+                          type="file"
+                          accept="video/*"
+                          id={`upload-video-${casa.id}`}
+                          style={{ display: 'none' }}
+                          onChange={async (e) => {
+                            const archivo = e.target.files[0]
+                            if (archivo) {
+                              if (archivo.size > 50 * 1024 * 1024) {
+                                alert('El video es muy pesado. Máximo 50 MB.')
+                                return
+                              }
+                              setSubiendoFoto(true)
+                              const nombreLimpio = archivo.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ñ/g, 'n').replace(/Ñ/g, 'N').replace(/[^a-zA-Z0-9.]/g, '_')
+                              const nombreArchivo = `video_${casa.id}_${Date.now()}_${nombreLimpio}`
+                              const { error: uploadError } = await supabase.storage.from('fotos-casas').upload(nombreArchivo, archivo)
+                              if (uploadError) {
+                                alert('Error al subir: ' + uploadError.message)
+                                setSubiendoFoto(false)
+                                return
+                              }
+                              const { data: urlData } = supabase.storage.from('fotos-casas').getPublicUrl(nombreArchivo)
+                              await supabase.from('casas').update({ video_file: urlData.publicUrl }).eq('id', casa.id)
+                              cargarCasas()
+                              setSubiendoFoto(false)
+                              e.target.value = ''
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => document.getElementById(`upload-video-${casa.id}`).click()}
+                          disabled={subiendoFoto}
+                          style={{ padding: '10px 20px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}
+                        >
+                          {subiendoFoto ? '⏳ Subiendo...' : '🎬 Subir video'}
+                        </button>
+                        {casa.video_file && (
+                          <button
+                            onClick={async () => {
+                              const nombreArchivo = casa.video_file?.split('/').pop()
+                              await supabase.storage.from('fotos-casas').remove([nombreArchivo])
+                              await supabase.from('casas').update({ video_file: null }).eq('id', casa.id)
+                              cargarCasas()
+                            }}
+                            style={{ padding: '8px 16px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
+                          >
+                            🗑️ Quitar video
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                     </div>
                   </div>
 
