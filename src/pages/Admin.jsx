@@ -918,27 +918,7 @@ function VistaConsultas() {
     const observacion = obsInput[consulta.id] || ''
     
     // Función para descargar consultas en Excel (CSV)
-function descargarCSV() {
-  if (consultas.length === 0) {
-    alert('No hay consultas para descargar')
-    return
-  }
-  
-  // Crear encabezados
-  let csv = 'Casa,Fecha Entrada,Fecha Salida,Noches,Precio Final,Observación,Estado,Fecha Consulta\n'
-  
-  // Agregar filas
-  consultas.forEach(c => {
-    csv += `"${c.casa_nombre || ''}","${c.fecha_entrada || ''}","${c.fecha_salida || ''}","${c.noches || ''}","${c.precio_final || ''}","${c.observacion || ''}","${c.estado || ''}","${new Date(c.created_at).toLocaleString('es-AR')}"\n`
-  })
-  
-  // Descargar
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `consultas_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}.csv`
-  link.click()
-}
+
     // 1. Actualizar la consulta en Supabase
     await supabase
       .from('consultas')
@@ -1004,6 +984,28 @@ function descargarCSV() {
   }
   
   cargarConsultas()
+}
+
+function descargarCSV() {
+  if (consultas.length === 0) {
+    alert('No hay consultas para descargar')
+    return
+  }
+  
+  // Crear encabezados
+  let csv = 'Casa,Fecha Entrada,Fecha Salida,Noches,Precio Final,Observación,Estado,Fecha Consulta\n'
+  
+  // Agregar filas
+  consultas.forEach(c => {
+    csv += `"${c.casa_nombre || ''}","${c.fecha_entrada || ''}","${c.fecha_salida || ''}","${c.noches || ''}","${c.precio_final || ''}","${c.observacion || ''}","${c.estado || ''}","${new Date(c.created_at).toLocaleString('es-AR')}"\n`
+  })
+  
+  // Descargar
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `consultas_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}.csv`
+  link.click()
 }
   
   return (
