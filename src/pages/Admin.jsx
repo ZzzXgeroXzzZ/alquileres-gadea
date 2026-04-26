@@ -1037,24 +1037,31 @@ function VistaConsultas() {
                 </div>
               )}
               
-              {/* Botones de acción */}
-{consulta.estado === 'Pendiente' && (
-  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-    <button onClick={() => confirmarConsulta(consulta)} style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
-      ✅ Confirmar y bloquear fechas
-    </button>
-    <button onClick={() => cancelarConsulta(consulta)} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
-      ❌ Cancelar
-    </button>
-  </div>
-)}
+                           {/* Botones de acción */}
+              {consulta.estado === 'Pendiente' && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  <button onClick={() => confirmarConsulta(consulta)} style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    ✅ Confirmar y bloquear fechas
+                  </button>
+                  <button onClick={() => cancelarConsulta(consulta)} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    ❌ Cancelar
+                  </button>
+                </div>
+              )}
 
-{consulta.estado === 'Confirmada' && (
-  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-    <button onClick={() => cancelarConsulta(consulta)} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
-      ❌ Cancelar reserva (desbloquear fechas)
-    </button>
-  </div>
-)}
+              {consulta.estado === 'Confirmada' && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  <button onClick={() => cancelarConsulta(consulta)} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    ❌ Cancelar reserva (desbloquear fechas)
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
-export default Admin 
+export default Admin
