@@ -526,6 +526,9 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: '600', color: '#1f2937' }}>{casa.nombre}</h3>
                     <p style={{ fontSize: 14, color: '#6b7280' }}>${casa.precio_por_noche?.toLocaleString('es-AR')} / noche</p>
+                    <p style={{ fontSize: 12, color: '#9ca3af' }}>
+  🖼️ {casa.fotos?.length || 0} foto{casa.fotos?.length !== 1 ? 's' : ''}
+</p>
                   </div>
                 </div>
                 
@@ -646,12 +649,13 @@ const nombreArchivo = `${casaId}_${Date.now()}_${nombreLimpio}`
                     
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                       {casa.fotos?.map((foto, idx) => (
-                        <div key={idx} style={{ position: 'relative', width: 80, height: 80 }}>
+                        <div key={idx} style={{ position: 'relative', width: 120, height: 120 }}>
                           <img 
-                            src={foto} 
-                            alt={`Foto ${idx + 1}`}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
-                          />
+  src={foto} 
+  alt={`Foto ${idx + 1}`}
+  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6, cursor: 'pointer' }}
+  onClick={() => window.open(foto, '_blank')}
+/>
                           <button
                             onClick={() => eliminarFoto(casa.id, foto, casa.fotos)}
                             style={{
