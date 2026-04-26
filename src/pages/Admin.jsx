@@ -1115,14 +1115,7 @@ function descargarCSV() {
                 </div>
               )}
 
-              <input
-  type="text"
-  placeholder="Teléfono del cliente"
-  value={telInput[consulta.id] || ''}
-  onChange={(e) => setTelInput({...telInput, [consulta.id]: e.target.value})}
-  style={{ flex: '1 1 150px', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px' }}
-/>
-              
+            
                            {/* Botones de acción */}
               {consulta.estado === 'Pendiente' && (
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
