@@ -288,6 +288,32 @@ function DetalleCasa() {
               </div>
             )}
             
+            {/* VIDEOS */}
+{(casa.video_url || casa.video_file) && (
+  <div style={{ marginBottom: '24px' }}>
+    <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>🎥 Video de la propiedad</h3>
+    
+    {casa.video_url && (
+      <div style={{ borderRadius: '8px', overflow: 'hidden' }}>
+        <iframe
+          width="100%"
+          height="315"
+          src={casa.video_url.replace('watch?v=', 'embed/').split('&')[0]}
+          title="Video de la propiedad"
+          allowFullScreen
+          style={{ border: 'none', borderRadius: '8px' }}
+        />
+      </div>
+    )}
+    
+    {casa.video_file && (
+      <video controls style={{ width: '100%', maxHeight: '400px', borderRadius: '8px' }}>
+        <source src={casa.video_file} type="video/mp4" />
+        Tu navegador no soporta videos.
+      </video>
+    )}
+  </div>
+)}
             {/* UBICACIÓN Y MAPA */}
             {casa.ubicacion && (
               <div style={{ marginBottom: '24px' }}>
